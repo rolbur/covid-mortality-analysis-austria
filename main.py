@@ -70,9 +70,9 @@ mortal_np = data_mortalRate_df_filtered_CovidYears["F-ANZ-1"].to_numpy()
 excessmortal = mortal_np - np.tile(mortalBaseline_np,[2])
 data_mortalRate_df_filtered_CovidYears["excessmortalCum"] = excessmortal.cumsum()
 
-# clean mortalility data, exclude covid deaths, add coved death deduced data to dataframe
+# clean mortalility data, exclude covid deaths, add covid death deduced data to dataframe
 F_ANZ_cleanedByCovidDeaths = []
-F_ANZ_cleanedByCovidDeaths.append(data_mortalRate_df_filtered["F-ANZ-1"].to_numpy(dtype=int)[0]) #add last value
+F_ANZ_cleanedByCovidDeaths.append(data_mortalRate_df_filtered["F-ANZ-1"].to_numpy(dtype=int)[0]) #add first value manually
 for lb, ub, F_ANZ in zip(data_mortalRate_df_filtered["Time"].to_numpy()[0:-1], \
                   data_mortalRate_df_filtered["Time"].to_numpy()[1::] , \
                   data_mortalRate_df_filtered["F-ANZ-1"].to_numpy(dtype=int)[1::]):
@@ -80,7 +80,6 @@ for lb, ub, F_ANZ in zip(data_mortalRate_df_filtered["Time"].to_numpy()[0:-1], \
     value_ub = np.interp(float(ub), covidDeathsCum_df["Time"].to_numpy(dtype=float), covidDeathsCum_df["CovidDeathsCum"].to_numpy(), left=0)
     delta = value_ub-value_lb
     F_ANZ_cleanedByCovidDeaths.append(F_ANZ-delta)
-#F_ANZ_cleanedByCovidDeaths.append(data_mortalRate_df_filtered["F-ANZ-1"].to_numpy(dtype=int)[-1]-delta) #add last value
 data_mortalRate_df_filtered["F_ANZ_cleanedByCovidDeaths"] = F_ANZ_cleanedByCovidDeaths
 # create some interesting views from covid mortality dataframe for later comparison
 data_mortalRate_df_filtered_CovidYearsCleaned = data_mortalRate_df_filtered.loc[(data_mortalRate_df_filtered["Year"].isin([2020,2021]))].copy()
@@ -114,7 +113,7 @@ ax.set_title("cumulated covid deaths")
 
 # plot vaccine progression
 fig, ax = pyplot.subplots()
-for i,[groupName, groupData] in enumerate(data_vaccDoses_df.loc[data_vaccDoses_df["state_name"]=="Österreich"].groupby(["vaccine","dose_number"])):
+for groupName, groupData in data_vaccDoses_df.loc[data_vaccDoses_df["state_name"]=="Österreich"].groupby(["vaccine","dose_number"]):
     groupData.plot(x="Time", y="doses_administered_cumulative", label = f"{groupName[0]} {groupName[1]}", ax=ax, ylim=[0,8e6])
 ax.grid(True)
 ax.set_title("vaccination progress")
@@ -132,12 +131,14 @@ data_mortalRate_df_filtered_CovidYears.plot(x="Time", y="excessmortalCum", color
                                             ax=ax)
 ax.grid(True)
 ax.set_title("excess mortality vs. covid deaths")
+ax.set_xlim(left = datetime.datetime(2020,1,1), right = datetime.datetime(2021,12,31))
 
 #%%############################################################################
-# plot cleaned morabilities
+# plot cleaned mortabilities
 ###############################################################################
 # plot mortalility per year
 fig, ax = pyplot.subplots()
+#for groupName, groupData in data_mortalRate_df_filtered_LastYears.loc[(data_mortalRate_df_filtered_LastYears["Year"].isin([2019,2020,2021]))].groupby(["Year"]):
 for groupName, groupData in data_mortalRate_df_filtered_LastYears.groupby(["Year"]):
     groupData["cum"] = groupData["F_ANZ_cleanedByCovidDeaths"].to_numpy().cumsum()
     groupData.plot(x="KW", y="cum", label=groupName, ax=ax, ylim=[0, 90000])
@@ -154,9 +155,11 @@ data_mortalRate_df_filtered_vaccYear.plot(x="Time", y="excessmortalCum",
                                           label = f"excess mortality, Covid deaths deducted, cumulated, baseline {mortalityBaselineYear_2}", 
                                           color = ['b'], marker="o", ax=ax)
 ax.legend(loc="upper left")
+ax.grid(True)
 ax2 = ax.twinx()
 # plot vaccine progression
-for i,[groupName, groupData] in enumerate(data_vaccDoses_df.loc[data_vaccDoses_df["state_name"]=="Österreich"].groupby(["vaccine","dose_number"])):
+for groupName, groupData in data_vaccDoses_df.loc[data_vaccDoses_df["state_name"]=="Österreich"].groupby(["vaccine","dose_number"]):
     groupData.plot(x="Time", y="doses_administered_cumulative", label = f"{groupName[0]} {groupName[1]}", ax=ax2, ylim=[0,8e6])
-ax.grid(True)
+
 ax.set_title("excess mortality (deduced covid deaths) vs. vaccination progress")
+ax.set_xlim(left = datetime.datetime(2021,1,1), right = datetime.datetime(2021,12,31))
