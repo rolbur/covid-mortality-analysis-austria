@@ -20,9 +20,9 @@ mortalityBaselineYear_2 = 2020 # for analysis of excess mortality (with already 
 ###############################################################################
 
 #import data
-data_vaccDoses_df = pd.read_csv("COVID19_vaccination_doses_timeline.csv", sep=";")
-data_mortalRate_df = pd.read_csv("OGD_rate_kalwo_GEST_KALWOCHE_STR_100.csv", sep=";", decimal=",")
-data_covidCases_df = pd.read_csv("CovidFaelle_Altersgruppe.csv", sep=";", decimal=",")
+data_vaccDoses_df = pd.read_csv(vacc_doses_file, sep=";")
+data_mortalRate_df = pd.read_csv(mortality_rate_file, sep=";", decimal=",")
+data_covidCases_df = pd.read_csv(covid_cases_file, sep=";", decimal=",")
 
 #data preparation
 #convert times in datasets to valid datetime format, add to column "Time"
