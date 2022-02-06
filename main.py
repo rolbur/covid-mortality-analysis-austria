@@ -61,6 +61,14 @@ for groupName, groupData in data_covidCases_df_filtered.groupby("Time"):
     covidDeathsCum_dict["Time"].append(groupName)
     covidDeathsCum_dict["CovidDeathsCum"].append(groupData["AnzahlTot"].sum())
 covidDeathsCum_df = pd.DataFrame(covidDeathsCum_dict)
+#out of data_covidCases_df create new dataframe with cumulated covid deaths by age
+covidDeathsByAgeCum_dict = defaultdict(list)
+for groupName, groupData in data_covidCases_df.loc[(data_covidCases_df["Time"].isin([data_covidCases_df["Time"].max()])) & \
+                                                   (data_covidCases_df["Bundesland"]=="Österreich")].groupby("AltersgruppeID"):
+    covidDeathsByAgeCum_dict["Altersgruppe"].append(groupData["Altersgruppe"].unique()[0]) 
+    covidDeathsByAgeCum_dict["AnzahlTot"].append(groupData["AnzahlTot"].sum()) 
+covidDeathsByAgeCum_df = pd.DataFrame(covidDeathsByAgeCum_dict)
+
 #create new dataframes about mortalility filtered for some defined years: baseline year and covid years
 data_mortalRate_df_filtered_baseline = data_mortalRate_df_filtered.loc[(data_mortalRate_df_filtered["Year"].isin([mortalityBaselineYear]))].copy()
 data_mortalRate_df_filtered_CovidYears = data_mortalRate_df_filtered.loc[(data_mortalRate_df_filtered["Year"].isin([2020,2021]))].copy()
@@ -104,12 +112,20 @@ for groupName, groupData in data_mortalRate_df_filtered_LastYears.groupby(["Year
     groupData.plot(x="KW", y="cum", label=groupName, ax=ax, ylim=[0, 90000])
 ax.grid(True)
 ax.set_title("mortality of last years")
+ax.set_ylabel("deaths")
 
 # plot covid deaths
 fig, ax = pyplot.subplots()
 covidDeathsCum_df.plot(x="Time", y="CovidDeathsCum", ylim=[0, 18000], ax=ax)
 ax.grid(True)
 ax.set_title("cumulated covid deaths")
+ax.set_ylabel("deaths")
+
+#plot covid deaths by age
+fig, ax = pyplot.subplots()
+covidDeathsByAgeCum_df.plot.bar(x="Altersgruppe", y="AnzahlTot", ax=ax, grid=True)
+ax.set_title(f"covid deaths by age, until {data_covidCases_df['Time'].max()}")
+ax.set_ylabel("deaths")
 
 # plot vaccine progression
 fig, ax = pyplot.subplots()
@@ -117,6 +133,7 @@ for groupName, groupData in data_vaccDoses_df.loc[data_vaccDoses_df["state_name"
     groupData.plot(x="Time", y="doses_administered_cumulative", label = f"{groupName[0]} {groupName[1]}", ax=ax, ylim=[0,8e6])
 ax.grid(True)
 ax.set_title("vaccination progress")
+ax.set_ylabel("vaccine doses")
 
 #%%############################################################################
 # plot excess mortalility vs. covid deaths
@@ -132,6 +149,7 @@ data_mortalRate_df_filtered_CovidYears.plot(x="Time", y="excessmortalCum", color
 ax.grid(True)
 ax.set_title("excess mortality vs. covid deaths")
 ax.set_xlim(left = datetime.datetime(2020,1,1), right = datetime.datetime(2021,12,31))
+ax.set_ylabel("deaths")
 
 #%%############################################################################
 # plot cleaned mortabilities
@@ -144,6 +162,7 @@ for groupName, groupData in data_mortalRate_df_filtered_LastYears.groupby(["Year
     groupData.plot(x="KW", y="cum", label=groupName, ax=ax, ylim=[0, 90000])
 ax.grid(True)
 ax.set_title("mortality, deduced covid deaths")
+ax.set_ylabel("deaths")
 
 #%%############################################################################
 # plot excess mortalility of vacc year, compare cleaned data (excluded covid deaths)
@@ -163,3 +182,5 @@ for groupName, groupData in data_vaccDoses_df.loc[data_vaccDoses_df["state_name"
 
 ax.set_title("excess mortality (deduced covid deaths) vs. vaccination progress")
 ax.set_xlim(left = datetime.datetime(2021,1,1), right = datetime.datetime(2021,12,31))
+ax.set_ylabel("deaths")
+ax2.set_ylabel("vaccine doses")
